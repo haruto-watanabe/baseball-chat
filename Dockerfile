@@ -1,12 +1,21 @@
-# Java 17 が入った軽量な環境を準備
-FROM eclipse-temurin:17-jre-alpine
-
-# 作業フォルダを作成
+# 第1ステージ: ビルド用（JDK 17 を使用）
+FROM eclipse-temurin:17-jdk-alpine AS build
 WORKDIR /app
 
-# ビルド済みのJARファイルをコピー
-# ※もしファイル名が違う場合は、ここの名前を書き換えてください
-COPY build/libs/demo-0.0.1-SNAPSHOT.jar app.jar
+# プロジェクトファイルをすべてコピー
+COPY . .
 
-# ポート番号をRenderの指定（PORT）に合わせて実行
+# gradlew に実行権限を与えて、JARファイルを作成
+RUN chmod +x gradlew
+RUN ./gradlew build -x test
+
+# 第2ステージ: 実行用（より軽量な JRE 17 を使用）
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+
+# 第1ステージで作られた JAR ファイルだけをコピー
+# ファイル名が違う場合でも対応できるようにワイルドカード（*）を使っています
+COPY --from=build /app/build/libs/*.jar app.jar
+
+# 実行
 ENTRYPOINT ["java", "-Dserver.port=${PORT}", "-jar", "app.jar"]
