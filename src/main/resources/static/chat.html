@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>試合別チャット</title>
+    <style>
+        /* v2のスタイルをここに貼る */
+        body { font-family: "Helvetica Neue", Arial, sans-serif; background-color: #f9f9f9; padding: 20px; }
+        #chat-box {
+            height: 450px; border: 1px solid #ddd; background: white;
+            overflow-y: scroll; padding: 15px; display: flex; flex-direction: column;
+            margin-bottom: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .message-container { display: flex; align-items: flex-start; margin-bottom: 12px; }
+
+        /* アイコンの設定 */
+        .avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            margin-right: 12px; background-color: #ddd; flex-shrink: 0;
+        }
+
+        .content { display: flex; flex-direction: column; }
+        .user-name { font-weight: bold; color: #606060; font-size: 0.9em; margin-bottom: 2px; }
+        .text { color: #0f0f0f; font-size: 0.95em; word-break: break-word; }
+
+        .input-area { display: flex; gap: 10px; background: white; padding: 10px; border-radius: 8px; }
+        input { padding: 10px; border: 1px solid #ccc; border-radius: 20px; outline: none; }
+        input:focus { border-color: #065fd4; }
+        button { padding: 8px 20px; background: #065fd4; color: white; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #054da7; }
+        body { font-family: sans-serif; background: #f9f9f9; padding: 20px; }
+        #chat-box { height: 450px; border: 1px solid #ddd; background: white; overflow-y: scroll; padding: 15px; display: flex; flex-direction: column; margin-bottom: 15px; border-radius: 12px; }
+        .message-container { display: flex; align-items: flex-start; margin-bottom: 12px; }
+        .avatar { width: 32px; height: 32px; border-radius: 50%; margin-right: 12px; background-color: #ddd; }
+        .user-name { font-weight: bold; color: #606060; }
+        .input-area { display: flex; gap: 10px; }
+        input { padding: 10px; border: 1px solid #ccc; border-radius: 20px; }
+        button { padding: 8px 20px; background: #065fd4; color: white; border: none; border-radius: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+<button onclick="location.href='index.html'" style="margin-bottom: 10px;">← 試合一覧に戻る</button>
+<h2 id="room-title">チャットルーム</h2>
+<div id="chat-box"></div>
+<div class="input-area">
+    <input type="text" id="name" placeholder="名前" style="width: 100px;">
+    <input type="text" id="message" placeholder="コメントを入力..." style="flex-grow: 1;" onkeydown="handleKeyPress(event)">
+    <button onclick="send()">送信</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<script>
+    var stompClient = null;
+    // URLから gameId を取得 (例: ?gameId=dena_vs_chunichi)
+    const urlParams = new URLSearchParams(window.location.search);
+    const gameId = urlParams.get('gameId');
+    document.getElementById('room-title').innerText = "試合ルーム: " + gameId;
+
+    function connect() {
+        var socket = new SockJS('/chat-websocket');
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function (frame) {
+            // その試合専用のトピックを購読(Subscribe)する
+            stompClient.subscribe('/topic/messages/' + gameId, function (response) {
+                showChat(response.body);
+            });
+        });
+    }
+
+    function handleKeyPress(event) { if (event.key === 'Enter') send(); }
+
+    function send() {
+        var name = document.getElementById('name').value || "匿名";
+        var msg = document.getElementById('message').value;
+        if (!msg) return;
+
+        // その試合専用の宛先にメッセージを送る
+        stompClient.send("/app/send/" + gameId, {}, name + ": " + msg);
+        document.getElementById('message').value = '';
+    }
+
+    function showChat(message) {
+        var chatBox = document.getElementById('chat-box');
+        var parts = message.split(': ');
+        var container = document.createElement('div');
+        container.className = 'message-container';
+        var iconUrl = "https://ui-avatars.com/api/?name=" + encodeURIComponent(parts[0]) + "&background=random";
+        container.innerHTML = `<img src="${iconUrl}" class="avatar"><div><div class="user-name">${parts[0]}</div><div>${parts[1]}</div></div>`;
+        chatBox.appendChild(container);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    window.onload = connect;
+</script>
+</body>
+</html>

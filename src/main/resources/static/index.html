@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>NPB Game Hub</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; }
+        .game-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .game-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 6px solid #005596; }
+        .live-badge { background: #ff4d4d; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold; }
+        .teams { display: flex; justify-content: space-between; font-size: 1.4em; font-weight: bold; margin: 15px 0; }
+        .join-btn { width: 100%; padding: 10px; background: #005596; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; }
+        .join-btn:hover { background: #003d6b; }
+    </style>
+</head>
+<body>
+<h1>プロ野球 試合一覧 <span style="font-size: 0.5em;">2026.04.29</span></h1>
+<div class="game-grid" id="game-list"></div>
+
+<script>
+    // 今日の試合データ（例としてDeNA戦など）
+    const games = [
+        { id: 'dena_vs_chunichi', away: 'DeNA', home: '中日', status: 'LIVE', score: '4 - 2', venue: 'バンテリンドーム' },
+        { id: 'giants_vs_hiroshima', away: '広島', home: '巨人', status: '18:00開始', score: '0 - 0', venue: '東京ドーム' },
+        { id: 'tigers_vs_swallows', away: '阪神', home: 'ヤクルト', status: 'LIVE', score: '2 - 0', venue: '神宮' }
+    ];
+
+    const list = document.getElementById('game-list');
+    games.forEach(game => {
+        const card = document.createElement('div');
+        card.className = 'game-card';
+        card.innerHTML = `
+                <div class="live-badge">${game.status}</div>
+                <div style="font-size: 0.9em; color: #666;">${game.venue}</div>
+                <div class="teams">
+                    <span>${game.away}</span> <span>${game.score}</span> <span>${game.home}</span>
+                </div>
+                <button class="join-btn" onclick="joinChat('${game.id}')">チャットに参加する</button>
+            `;
+        list.appendChild(card);
+    });
+
+    function joinChat(gameId) {
+        // chat.htmlへ試合IDをくっつけて移動する
+        window.location.href = `chat.html?gameId=${gameId}`;
+    }
+</script>
+</body>
+</html>
