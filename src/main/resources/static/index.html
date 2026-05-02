@@ -4,46 +4,79 @@
     <meta charset="UTF-8">
     <title>NPB Game Hub</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; }
-        .game-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .game-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 6px solid #005596; }
-        .live-badge { background: #ff4d4d; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold; }
-        .teams { display: flex; justify-content: space-between; font-size: 1.4em; font-weight: bold; margin: 15px 0; }
-        .join-btn { width: 100%; padding: 10px; background: #005596; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; }
-        .join-btn:hover { background: #003d6b; }
+        /* 前回のスタイルを継承しつつ追加 */
+        .header-actions { display: flex; justify-content: space-between; align-items: center; }
+        .calendar-btn { background: none; border: 1px solid #ccc; padding: 8px; border-radius: 5px; cursor: pointer; font-size: 1.2rem; }
+
+        /* 簡易カレンダーモーダルのスタイル */
+        #calendar-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; padding: 20px; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.3); z-index: 100; }
+        .modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:90; }
+
+        input[type="date"] { padding: 10px; font-size: 1rem; border-radius: 5px; border: 1px solid #ddd; }
     </style>
 </head>
 <body>
-<h1>プロ野球 試合一覧 <span style="font-size: 0.5em;">2026.04.29</span></h1>
-<div class="game-grid" id="game-list"></div>
+<div class="container">
+    <header class="header-actions">
+        <h1>NPB Game Hub <span id="display-date">2026.05.02</span></h1>
+        <button class="calendar-btn" onclick="toggleCalendar()">📅 日付選択</button>
+    </header>
+
+    <div id="game-list" class="game-grid">
+        <!-- ここに試合カードが動的に挿入される -->
+    </div>
+</div>
+
+<!-- カレンダーモーダル -->
+<div class="modal-overlay" id="overlay" onclick="toggleCalendar()"></div>
+<div id="calendar-modal">
+    <h3>試合日を選択</h3>
+    <input type="date" id="date-picker" value="2026-05-02" onchange="loadGames(this.value)">
+    <button onclick="toggleCalendar()" style="margin-top: 10px; width: 100%;">閉じる</button>
+</div>
 
 <script>
-    // 今日の試合データ（例としてDeNA戦など）
-    const games = [
-        { id: 'dena_vs_chunichi', away: 'DeNA', home: '中日', status: 'LIVE', score: '4 - 2', venue: 'バンテリンドーム' },
-        { id: 'giants_vs_hiroshima', away: '広島', home: '巨人', status: '18:00開始', score: '0 - 0', venue: '東京ドーム' },
-        { id: 'tigers_vs_swallows', away: '阪神', home: 'ヤクルト', status: 'LIVE', score: '2 - 0', venue: '神宮' }
-    ];
-
-    const list = document.getElementById('game-list');
-    games.forEach(game => {
-        const card = document.createElement('div');
-        card.className = 'game-card';
-        card.innerHTML = `
-                <div class="live-badge">${game.status}</div>
-                <div style="font-size: 0.9em; color: #666;">${game.venue}</div>
-                <div class="teams">
-                    <span>${game.away}</span> <span>${game.score}</span> <span>${game.home}</span>
-                </div>
-                <button class="join-btn" onclick="joinChat('${game.id}')">チャットに参加する</button>
-            `;
-        list.appendChild(card);
-    });
-
-    function joinChat(gameId) {
-        // chat.htmlへ試合IDをくっつけて移動する
-        window.location.href = `chat.html?gameId=${gameId}`;
+    function toggleCalendar() {
+        const modal = document.getElementById('calendar-modal');
+        const overlay = document.getElementById('overlay');
+        const isVisible = modal.style.display === 'block';
+        modal.style.display = isVisible ? 'none' : 'block';
+        overlay.style.display = isVisible ? 'none' : 'block';
     }
+
+    async function loadGames(date) {
+        const response = await fetch(`/api/games?date=${date}`);
+        const games = await response.json();
+
+        document.getElementById('display-date').innerText = date.replace(/-/g, '.');
+        const container = document.getElementById('game-list');
+        container.innerHTML = ''; // 一旦クリア
+
+        if (games.length === 0) {
+            container.innerHTML = '<p>この日の試合予定はありません。</p>';
+            return;
+        }
+
+        games.forEach(game => {
+            const card = document.createElement('div');
+            card.className = 'game-card';
+            card.innerHTML = `
+                    <div class="live-badge">${game.status}</div>
+                    <div style="color: #666;">${game.venue} (${game.startTime})</div>
+                    <div class="teams">
+                        <span>${game.awayTeam}</span> <span>vs</span> <span>${game.homeTeam}</span>
+                    </div>
+                    <button class="join-btn" onclick="location.href='chat.html?gameId=${game.id}'">チャットに参加</button>
+                `;
+            container.appendChild(card);
+        });
+
+        if (document.getElementById('calendar-modal').style.display === 'block') toggleCalendar();
+    }
+
+    // 初回読み込み
+    window.onload = () => loadGames('2026-05-02');
 </script>
 </body>
 </html>
