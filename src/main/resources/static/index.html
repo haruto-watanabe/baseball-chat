@@ -2,38 +2,83 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>NPB Game Hub</title>
+    <title>NPB Game Hub v3</title>
     <style>
-        /* 前回のスタイルを継承しつつ追加 */
-        .header-actions { display: flex; justify-content: space-between; align-items: center; }
-        .calendar-btn { background: none; border: 1px solid #ccc; padding: 8px; border-radius: 5px; cursor: pointer; font-size: 1.2rem; }
+        body { font-family: "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; padding: 20px; margin: 0; }
+        .container { max-width: 1000px; margin: 0 auto; }
 
-        /* 簡易カレンダーモーダルのスタイル */
-        #calendar-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: white; padding: 20px; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.3); z-index: 100; }
+        /* ヘッダー周り */
+        .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        h1 { color: #005596; margin: 0; }
+
+        /* ボタンを横並びにする設定 */
+        .button-group { display: flex; gap: 10px; }
+
+        .today-btn {
+            background: #005596;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .today-btn:hover { background: #003d6b; }
+
+        .calendar-btn { background: white; border: 1px solid #005596; color: #005596; padding: 10px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .calendar-btn:hover { background: #005596; color: white; }
+
+        /* ゲームグリッド */
+        .game-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+
+        /* カードデザイン（スケジュール特化） */
+        .game-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 8px solid #005596; position: relative; }
+        .live-badge { position: absolute; top: 15px; right: 15px; background: #666; color: white; padding: 3px 10px; border-radius: 4px; font-size: 0.75em; font-weight: bold; }
+        .venue-info { font-size: 0.85em; color: #666; margin-bottom: 10px; }
+
+        .teams-area { display: flex; justify-content: space-around; align-items: center; margin: 20px 0; }
+        .team-name { font-size: 1.4em; font-weight: bold; color: #333; }
+        .vs-label { font-size: 1.1em; color: #999; }
+
+        .join-btn { width: 100%; padding: 12px; background: #005596; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1em; font-weight: bold; transition: 0.2s; }
+        .join-btn:hover:not(:disabled) { background: #003d6b; transform: translateY(-2px); }
+
+        /* 追加：制限時間外のボタン形式 */
+        .join-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .lock-icon { font-size: 0.9em; margin-right: 5px; }
+
+        /* モーダル */
+        #calendar-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 100; text-align: center; }
         .modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:90; }
-
-        input[type="date"] { padding: 10px; font-size: 1rem; border-radius: 5px; border: 1px solid #ddd; }
+        input[type="date"] { padding: 12px; font-size: 1.1rem; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; width: 100%; box-sizing: border-box; }
     </style>
 </head>
 <body>
+
 <div class="container">
     <header class="header-actions">
-        <h1>NPB Game Hub <span id="display-date">2026.05.02</span></h1>
-        <button class="calendar-btn" onclick="toggleCalendar()">📅 日付選択</button>
+        <h1>NPB Hub <span id="display-date" style="font-size: 0.6em; color: #666;"></span></h1>
+        <div class="button-group">
+            <button class="today-btn" onclick="goToToday()">本日</button>
+            <button class="calendar-btn" onclick="toggleCalendar()">📅 日付を変える</button>
+        </div>
     </header>
 
-    <div id="game-list" class="game-grid">
-        <!-- ここに試合カードが動的に挿入される -->
+    <div class="game-grid" id="game-list">
+        <!-- JSで挿入 -->
     </div>
 </div>
 
-<!-- カレンダーモーダル -->
 <div class="modal-overlay" id="overlay" onclick="toggleCalendar()"></div>
 <div id="calendar-modal">
-    <h3>試合日を選択</h3>
-    <input type="date" id="date-picker" value="2026-05-02" onchange="loadGames(this.value)">
-    <button onclick="toggleCalendar()" style="margin-top: 10px; width: 100%;">閉じる</button>
+    <h3 style="margin-top:0;">試合日を選択</h3>
+    <input type="date" id="date-picker" onchange="loadGames(this.value)">
+    <button onclick="toggleCalendar()" style="background: #eee; border:none; padding:10px; border-radius:5px; width:100%; cursor:pointer;">閉じる</button>
 </div>
 
 <script>
@@ -45,38 +90,69 @@
         overlay.style.display = isVisible ? 'none' : 'block';
     }
 
+    function goToToday() {
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const todayStr = `${yyyy}-${mm}-${dd}`;
+
+        document.getElementById('date-picker').value = todayStr;
+        loadGames(todayStr);
+    }
+
     async function loadGames(date) {
         const response = await fetch(`/api/games?date=${date}`);
         const games = await response.json();
 
         document.getElementById('display-date').innerText = date.replace(/-/g, '.');
         const container = document.getElementById('game-list');
-        container.innerHTML = ''; // 一旦クリア
+        container.innerHTML = '';
+
+        // 現在時刻の取得
+        const now = new Date();
 
         if (games.length === 0) {
-            container.innerHTML = '<p>この日の試合予定はありません。</p>';
-            return;
-        }
+            container.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#999; margin-top:50px;">この日の試合予定はありません。</p>';
+        } else {
+            games.forEach(game => {
+                // 入室制限の判定
+                const [year, month, day] = game.date.split('-').map(Number);
 
-        games.forEach(game => {
-            const card = document.createElement('div');
-            card.className = 'game-card';
-            card.innerHTML = `
+                // 開始：当日の 10:00
+                const openTime = new Date(year, month - 1, day, 10, 0, 0);
+                // 終了：翌日の 04:00
+                const closeTime = new Date(year, month - 1, day + 1, 4, 0, 0);
+
+                const isOpen = now >= openTime && now <= closeTime;
+
+                const card = document.createElement('div');
+                card.className = 'game-card';
+                card.innerHTML = `
                     <div class="live-badge">${game.status}</div>
-                    <div style="color: #666;">${game.venue} (${game.startTime})</div>
-                    <div class="teams">
-                        <span>${game.awayTeam}</span> <span>vs</span> <span>${game.homeTeam}</span>
+                    <div class="venue-info">${game.venue} ｜ ${game.startTime} 開始</div>
+                    <div class="teams-area">
+                        <span class="team-name">${game.awayTeam}</span>
+                        <span class="vs-label">vs</span>
+                        <span class="team-name">${game.homeTeam}</span>
                     </div>
-                    <button class="join-btn" onclick="location.href='chat.html?gameId=${game.id}'">チャットに参加</button>
+                    <button class="join-btn"
+                            ${!isOpen ? 'disabled' : ''}
+                            onclick="location.href='chat.html?gameId=${game.id}&date=${game.date}'">
+                        ${isOpen ? 'チャットに参加' : '<span class="lock-icon">🔒</span>時間外'}
+                    </button>
                 `;
-            container.appendChild(card);
-        });
+                container.appendChild(card);
+            });
+        }
 
         if (document.getElementById('calendar-modal').style.display === 'block') toggleCalendar();
     }
 
-    // 初回読み込み
-    window.onload = () => loadGames('2026-05-02');
+    window.onload = () => {
+        goToToday();
+    };
 </script>
+
 </body>
 </html>

@@ -1,15 +1,14 @@
 package com.example.demo;
 
 /**
- * 試合情報を保持するRecord。
- * フィールドは自動的にprivate finalになり、getterも自動生成されます。
+ * 試合スケジュールに特化したデータ構造
  */
 public record BaseballGame(
-        String id,        // dena-vs-chunichi-20260502
+        String id,
         String date,      // 2026-05-02
         String startTime, // 14:00
-        String homeTeam,  // 中日
-        String awayTeam,  // 横浜DeNA
-        String venue,     // バンテリンドーム
-        String status     // LIVE, FINISHED, 14:00開始 など
+        String awayTeam,
+        String homeTeam,
+        String venue,
+        String status     // 試合前, 試合終了, 中止 など
 ) {}
