@@ -2,86 +2,141 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <!-- スマホ対応に必須のメタタグ -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>試合別チャット</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>野球談義 - ライブチャット</title>
     <style>
-        /* --- 基本スタイル（PC向け） --- */
+        /* --- 基本スタイル（YouTubeダークモード風） --- */
         body {
-            font-family: "Helvetica Neue", Arial, sans-serif;
-            background-color: #f9f9f9;
-            padding: 20px;
+            font-family: "Roboto", "Arial", sans-serif;
+            background-color: #0f0f0f; /* YouTubeの背景色 */
+            color: #ffffff;
             margin: 0;
             display: flex;
             flex-direction: column;
             height: 100vh;
-            box-sizing: border-box;
+            overflow: hidden;
         }
 
+        /* ヘッダー */
+        .header {
+            padding: 10px 15px;
+            background: #0f0f0f;
+            border-bottom: 1px solid #2f2f2f;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
         .back-btn {
-            margin-bottom: 10px;
-            padding: 8px 15px;
-            background: #eee;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            cursor: pointer;
-            width: fit-content;
+            color: #aaa;
+            text-decoration: none;
+            font-size: 1.2rem;
+            padding: 5px;
         }
+        h2 { font-size: 1rem; margin: 0; flex-grow: 1; text-align: center; color: #fff; }
 
+        /* チャット表示エリア */
         #chat-box {
-            flex-grow: 1; /* 画面の余白を埋めるように広がる */
-            border: 1px solid #ddd;
-            background: white;
-            overflow-y: scroll;
-            padding: 15px;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px 5px;
             display: flex;
             flex-direction: column;
-            margin-bottom: 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            gap: 4px;
         }
 
-        .message-container { display: flex; align-items: flex-start; margin-bottom: 12px; }
-        .avatar { width: 32px; height: 32px; border-radius: 50%; margin-right: 12px; background-color: #ddd; flex-shrink: 0; }
-        .user-name { font-weight: bold; color: #606060; font-size: 0.85em; margin-bottom: 2px; }
-        .text { color: #0f0f0f; font-size: 0.95em; word-break: break-word; }
+        /* メッセージ一行のスタイル */
+        .message-container {
+            display: flex;
+            align-items: flex-start;
+            padding: 4px 10px;
+            transition: background 0.2s;
+        }
+        .message-container:hover { background: rgba(255,255,255,0.05); }
 
-        .input-area { display: flex; gap: 10px; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
-        input {
-            padding: 12px;
-            border: 1px solid #ccc;
+        .avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 12px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .content { display: flex; flex-wrap: wrap; align-items: baseline; }
+        .user-name {
+            font-weight: bold;
+            color: #aaa; /* YouTube風の控えめな色 */
+            font-size: 0.85rem;
+            margin-right: 8px;
+        }
+        .text {
+            color: #efefef;
+            font-size: 0.85rem;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+
+        /* フッター入力エリア */
+        .input-area {
+            background: #0f0f0f;
+            padding: 10px 15px;
+            border-top: 1px solid #2f2f2f;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: calc(10px + env(safe-area-inset-bottom)); /* iPhoneのバー対策 */
+        }
+
+        .input-wrapper {
+            flex-grow: 1;
+            background: #272727;
             border-radius: 20px;
+            padding: 5px 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        input {
+            background: transparent;
+            border: none;
+            color: white;
+            flex-grow: 1;
+            padding: 8px 0;
             outline: none;
-            font-size: 16px; /* iOSでの自動ズームを防ぐため16px以上に設定 */
+            font-size: 16px;
         }
-        input:focus { border-color: #065fd4; }
-        button.send-btn { padding: 8px 20px; background: #065fd4; color: white; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; }
 
-        /* --- スマホ向けスタイル（画面幅768px以下） --- */
-        @media (max-width: 768px) {
-            body { padding: 10px; }
-            h2 { font-size: 1.2rem; margin: 10px 0; }
-            #chat-box { height: auto; padding: 10px; margin-bottom: 10px; }
-
-            .input-area {
-                flex-wrap: wrap; /* 狭い画面では折り返し許可 */
-                gap: 5px;
-                padding: 8px;
-            }
-            #name { width: 80px; } /* 名前欄を少しコンパクトに */
-            #message { flex-grow: 1; min-width: 150px; }
-            .send-btn { width: 100%; margin-top: 5px; } /* 送信ボタンを横いっぱいに */
+        .send-btn {
+            background: transparent;
+            border: none;
+            color: #3ea6ff; /* YouTubeのリンク/ボタン色 */
+            font-weight: bold;
+            cursor: pointer;
+            padding: 5px 10px;
+            font-size: 0.9rem;
         }
+        .send-btn:disabled { color: #555; }
+
+        /* スクロールバーのカスタマイズ */
+        #chat-box::-webkit-scrollbar { width: 4px; }
+        #chat-box::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
     </style>
 </head>
 <body>
-<button class="back-btn" onclick="location.href='index.html'">← 試合一覧に戻る</button>
-<h2 id="room-title">チャットルーム</h2>
+
+<div class="header">
+    <a href="index.html" class="back-btn">✕</a>
+    <h2 id="room-title">チャット</h2>
+    <div style="width: 30px;"></div> </div>
+
 <div id="chat-box"></div>
+
 <div class="input-area">
-    <input type="text" id="name" placeholder="名前" style="width: 80px;">
-    <input type="text" id="message" placeholder="コメントを入力..." style="flex-grow: 1;" onkeydown="handleKeyPress(event)">
-    <button class="send-btn" onclick="send()">送信</button>
+    <div class="input-wrapper">
+        <input type="text" id="name" placeholder="名前" style="width: 60px; border-right: 1px solid #444; margin-right: 10px; padding-right: 5px;">
+        <input type="text" id="message" placeholder="チャットを入力..." onkeydown="handleKeyPress(event)">
+    </div>
+    <button class="send-btn" id="send-btn" onclick="send()">送信</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
@@ -90,13 +145,14 @@
     var stompClient = null;
     const urlParams = new URLSearchParams(window.location.search);
     const gameId = urlParams.get('gameId');
-    const gameDateStr = urlParams.get('date'); // index.htmlから日付を受け取る
+    const gameDateStr = urlParams.get('date');
 
-    document.getElementById('room-title').innerText = "試合ルーム: " + (gameId || "選択なし");
+    document.getElementById('room-title').innerText = gameId ? gameId.split('-').slice(0, 2).join(' vs ') : "ライブチャット";
 
     function connect() {
         var socket = new SockJS('/chat-websocket');
         stompClient = Stomp.over(socket);
+        stompClient.debug = null; // コンソールのログを非表示にして動作を軽くする
         stompClient.connect({}, function (frame) {
             stompClient.subscribe('/topic/messages/' + gameId, function (response) {
                 showChat(response.body);
@@ -104,16 +160,11 @@
         });
     }
 
-    // 入室制限のチェック
     function checkAccess() {
-        if (!gameDateStr) return true; // 日付がない場合はチェックをスキップ
-
+        if (!gameDateStr) return true;
         const now = new Date();
         const [year, month, day] = gameDateStr.split('-').map(Number);
-
-        // 開始：当日の 10:00
         const openTime = new Date(year, month - 1, day, 10, 0, 0);
-        // 終了：翌日の 04:00
         const closeTime = new Date(year, month - 1, day + 1, 4, 0, 0);
 
         if (now < openTime || now > closeTime) {
@@ -127,21 +178,34 @@
     function handleKeyPress(event) { if (event.key === 'Enter') send(); }
 
     function send() {
-        var name = document.getElementById('name').value || "匿名";
-        var msg = document.getElementById('message').value;
+        var nameInput = document.getElementById('name');
+        var name = nameInput.value || "匿名";
+        var msgInput = document.getElementById('message');
+        var msg = msgInput.value;
         if (!msg) return;
 
         stompClient.send("/app/send/" + gameId, {}, name + ": " + msg);
-        document.getElementById('message').value = '';
+        msgInput.value = '';
     }
 
     function showChat(message) {
         var chatBox = document.getElementById('chat-box');
         var parts = message.split(': ');
+        var name = parts[0];
+        var text = parts.slice(1).join(': ');
+
         var container = document.createElement('div');
         container.className = 'message-container';
-        var iconUrl = "https://ui-avatars.com/api/?name=" + encodeURIComponent(parts[0]) + "&background=random";
-        container.innerHTML = `<img src="${iconUrl}" class="avatar"><div><div class="user-name">${parts[0]}</div><div class="text">${parts[1]}</div></div>`;
+
+        var iconUrl = "https://ui-avatars.com/api/?name=" + encodeURIComponent(name) + "&background=random&color=fff&size=32";
+
+        container.innerHTML = `
+            <img src="${iconUrl}" class="avatar">
+            <div class="content">
+                <span class="user-name">${name}</span>
+                <span class="text">${text}</span>
+            </div>
+        `;
         chatBox.appendChild(container);
         chatBox.scrollTop = chatBox.scrollHeight;
     }
