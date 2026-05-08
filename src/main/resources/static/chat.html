@@ -5,19 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>野球談義 - ライブチャット</title>
     <style>
-        /* --- 基本スタイル（YouTubeダークモード風） --- */
+        /* --- 基本スタイル（スマホ：ダークモード） --- */
         body {
             font-family: "Roboto", "Arial", sans-serif;
-            background-color: #0f0f0f; /* YouTubeの背景色 */
+            background-color: #0f0f0f;
             color: #ffffff;
             margin: 0;
             display: flex;
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
+            transition: background-color 0.3s;
         }
 
-        /* ヘッダー */
         .header {
             padding: 10px 15px;
             background: #0f0f0f;
@@ -26,15 +26,9 @@
             align-items: center;
             justify-content: space-between;
         }
-        .back-btn {
-            color: #aaa;
-            text-decoration: none;
-            font-size: 1.2rem;
-            padding: 5px;
-        }
+        .back-btn { color: #aaa; text-decoration: none; font-size: 1.2rem; padding: 5px; }
         h2 { font-size: 1rem; margin: 0; flex-grow: 1; text-align: center; color: #fff; }
 
-        /* チャット表示エリア */
         #chat-box {
             flex-grow: 1;
             overflow-y: auto;
@@ -44,39 +38,12 @@
             gap: 4px;
         }
 
-        /* メッセージ一行のスタイル */
-        .message-container {
-            display: flex;
-            align-items: flex-start;
-            padding: 4px 10px;
-            transition: background 0.2s;
-        }
-        .message-container:hover { background: rgba(255,255,255,0.05); }
-
-        .avatar {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            margin-right: 12px;
-            margin-top: 2px;
-            flex-shrink: 0;
-        }
-
+        .message-container { display: flex; align-items: flex-start; padding: 4px 10px; }
+        .avatar { width: 24px; height: 24px; border-radius: 50%; margin-right: 12px; flex-shrink: 0; }
         .content { display: flex; flex-wrap: wrap; align-items: baseline; }
-        .user-name {
-            font-weight: bold;
-            color: #aaa; /* YouTube風の控えめな色 */
-            font-size: 0.85rem;
-            margin-right: 8px;
-        }
-        .text {
-            color: #efefef;
-            font-size: 0.85rem;
-            word-break: break-word;
-            line-height: 1.4;
-        }
+        .user-name { font-weight: bold; color: #aaa; font-size: 0.85rem; margin-right: 8px; }
+        .text { color: #efefef; font-size: 0.85rem; word-break: break-word; line-height: 1.4; }
 
-        /* フッター入力エリア */
         .input-area {
             background: #0f0f0f;
             padding: 10px 15px;
@@ -84,7 +51,6 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            padding-bottom: calc(10px + env(safe-area-inset-bottom)); /* iPhoneのバー対策 */
         }
 
         .input-wrapper {
@@ -100,7 +66,6 @@
             background: transparent;
             border: none;
             color: white;
-            flex-grow: 1;
             padding: 8px 0;
             outline: none;
             font-size: 16px;
@@ -109,17 +74,49 @@
         .send-btn {
             background: transparent;
             border: none;
-            color: #3ea6ff; /* YouTubeのリンク/ボタン色 */
+            color: #3ea6ff;
             font-weight: bold;
             cursor: pointer;
             padding: 5px 10px;
-            font-size: 0.9rem;
         }
-        .send-btn:disabled { color: #555; }
 
-        /* スクロールバーのカスタマイズ */
-        #chat-box::-webkit-scrollbar { width: 4px; }
-        #chat-box::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        /* --- PC向けスタイル（画面幅 769px 以上） --- */
+        @media (min-width: 769px) {
+            body { background-color: #ffffff; color: #333; }
+            .header { background: #ffffff; border-bottom: 1px solid #ddd; }
+            h2 { color: #333; }
+            .back-btn { color: #333; }
+
+            /* メッセージの色調整 */
+            .user-name { color: #555; }
+            .text { color: #000; }
+            .message-container:hover { background: rgba(0,0,0,0.02); }
+
+            /* 入力エリア（白基調 & 2:7 比率） */
+            .input-area { background: #ffffff; border-top: 1px solid #ddd; }
+            .input-wrapper {
+                background: #f1f1f1;
+                border: 1px solid #ccc;
+                border-radius: 10px; /* PCは少しカッチリめ */
+            }
+            input { color: #333; }
+
+            /* ここで 2:7 の比率を指定 */
+            #name {
+                flex: 2 !important; /* 全体の2/9 */
+                width: auto !important;
+                border-right: 1px solid #ccc !important;
+                margin-right: 10px;
+            }
+            #message {
+                flex: 7 !important; /* 全体の7/9 */
+            }
+
+            .send-btn { color: #065fd4; }
+
+            /* スクロールバーを見やすく */
+            #chat-box::-webkit-scrollbar-thumb { background: #ccc; }
+        }
     </style>
 </head>
 <body>
@@ -127,13 +124,15 @@
 <div class="header">
     <a href="index.html" class="back-btn">✕</a>
     <h2 id="room-title">チャット</h2>
-    <div style="width: 30px;"></div> </div>
+    <div style="width: 30px;"></div>
+</div>
 
 <div id="chat-box"></div>
 
 <div class="input-area">
     <div class="input-wrapper">
-        <input type="text" id="name" placeholder="名前" style="width: 60px; border-right: 1px solid #444; margin-right: 10px; padding-right: 5px;">
+        <!-- 比率指定のため style="width: 60px" を削除し、CSS側で制御 -->
+        <input type="text" id="name" placeholder="名前">
         <input type="text" id="message" placeholder="チャットを入力..." onkeydown="handleKeyPress(event)">
     </div>
     <button class="send-btn" id="send-btn" onclick="send()">送信</button>
@@ -152,7 +151,7 @@
     function connect() {
         var socket = new SockJS('/chat-websocket');
         stompClient = Stomp.over(socket);
-        stompClient.debug = null; // コンソールのログを非表示にして動作を軽くする
+        stompClient.debug = null;
         stompClient.connect({}, function (frame) {
             stompClient.subscribe('/topic/messages/' + gameId, function (response) {
                 showChat(response.body);
