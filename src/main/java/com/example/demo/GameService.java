@@ -1,6 +1,8 @@
 package com.example.demo;
 
 import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -633,6 +635,29 @@ public class GameService {
         // 入力された日付(yyyy-MM-dd)に一致する試合のみを抽出
         return schedule.stream()
                 .filter(g -> g.date().equals(date))
+                .map(this::updateGameStatus)
                 .collect(Collectors.toList());
+    }
+    private BaseballGame updateGameStatus(BaseballGame g) {
+        try {
+            // 文字列の日付と時刻を LocalDateTime に変換
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+            LocalDateTime startDateTime = LocalDateTime.parse(g.date() + " " + g.startTime(), formatter);
+            LocalDateTime now = LocalDateTime.now();
+
+            String newStatus;
+            if (now.isBefore(startDateTime)) {
+                newStatus = "試合前";
+            } else if (now.isBefore(startDateTime.plusHours(4))) { // 開始から4時間以内は「試合中」
+                newStatus = "試合中";
+            } else {
+                newStatus = "試合終了";
+            }
+
+            // record の値をコピーして新しいインスタンスを返す
+            return new BaseballGame(g.id(), g.date(), g.startTime(), g.awayTeam(), g.homeTeam(), g.venue(), newStatus);
+        } catch (Exception e) {
+            return g; // パースに失敗した場合は元のデータを返す
+        }
     }
 }
