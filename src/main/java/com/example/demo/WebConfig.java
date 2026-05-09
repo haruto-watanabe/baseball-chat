@@ -9,7 +9,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**") // すべてのURLを対象に
-                .allowedOrigins("https://渡辺さんのユーザー名.github.io") // GitHub PagesのURL
+                .allowedOriginPatterns("*")// GitHub PagesのURL
                 .allowedMethods("GET", "POST", "PUT", "DELETE");
     }
 }

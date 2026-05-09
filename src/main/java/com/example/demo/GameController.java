@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "https://haruto-watanabe.github.io")
+@CrossOrigin(originPatterns = "*")
 public class GameController {
 
     private final GameService gameService;
