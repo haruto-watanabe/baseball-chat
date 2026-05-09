@@ -2,6 +2,7 @@ package com.example.demo;
 
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -643,7 +644,7 @@ public class GameService {
             // 文字列の日付と時刻を LocalDateTime に変換
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
             LocalDateTime startDateTime = LocalDateTime.parse(g.date() + " " + g.startTime(), formatter);
-            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Tokyo"));
 
             String newStatus;
             if (now.isBefore(startDateTime)) {
